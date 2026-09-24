@@ -1,0 +1,6 @@
+# 실제 고객 서류 — 절대 GitHub 에 올리지 않는다
+private_samples/
+outputs_private/
+
+__pycache__/
+.venv/
