@@ -1,0 +1,13 @@
+{
+  "pdfs": "data/samples",
+  "out": "outputs",
+  "run_id": "run1",
+  "backend": "clip",
+  "dpi": 200,
+  "judge_dpi": 72,
+  "a4_ratio": 0.95,
+  "clip_model": "openai/clip-vit-base-patch32",
+  "clip_threshold": 0.5,
+  "clip_prompts": "v1",
+  "jpg_quality": 92
+}

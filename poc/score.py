@@ -35,6 +35,13 @@ def main():
     print(f"  A4/작은 서류   {size_ok}/{n}")
     print(f"  폴더까지 정확  {both_ok}/{n}")
 
+    n_small = sum(truth[k]["size"] == "small" for k in keys)
+    caught = sum(truth[k]["size"] == "small" and pred[k]["size"] == "small" for k in keys)
+    false_alarm = sum(truth[k]["size"] == "A4" and pred[k]["size"] == "small" for k in keys)
+    by_size = sum(truth[k]["size"] == "small" and pred[k]["decided_by"] == "page_size" for k in keys)
+    print(f"  작은 서류 잡아냄 {caught}/{n_small}  (A4 를 작은 서류로 잘못 보냄 {false_alarm}장)")
+    print(f"  [비교] '전부 A4' 라고 했을 때: {n - n_small + by_size}/{n}, 작은 서류 {by_size}/{n_small} (페이지 크기로 잡히는 것만)")
+
     cm = {(t, p): 0 for t in ("A4", "small") for p in ("A4", "small")}
     for k in keys:
         cm[(truth[k]["size"], pred[k]["size"])] += 1

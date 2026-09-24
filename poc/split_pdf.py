@@ -29,17 +29,27 @@ from PIL import Image
 A4_MM = (210.0, 297.0)
 PT_PER_MM = 72 / 25.4
 
-# 제로샷 분류 설명문. 결과를 보기 전에 정했고, 결과를 본 뒤 고치지 않는다.
-PROMPTS_A4 = [
-    "a scanned full page paper document",
-    "a scanned A4 document page with text and tables",
-    "a scanned certificate that fills the whole page",
-]
-PROMPTS_SMALL = [
-    "a small ID card or passport placed on a blank white sheet of paper",
-    "a small piece of paper lying on a larger empty white page",
-    "a scan of a passport on an otherwise blank page",
-]
+# 제로샷 분류 설명문.
+# v1: 결과를 보기 전에 정했다 (run1).
+# v2: v1 의 가짜 샘플 실패 2건(작은 아포스티유, 작은 확인서)만 보고 '서류처럼 생긴 작은 종이' 설명을 더했다.
+#     실제 서류(private_samples)는 v2 를 확정한 뒤 한 번만 돌린다 (run2).
+PROMPTS = {
+    "v1": {
+        "A4": ["a scanned full page paper document",
+               "a scanned A4 document page with text and tables",
+               "a scanned certificate that fills the whole page"],
+        "small": ["a small ID card or passport placed on a blank white sheet of paper",
+                  "a small piece of paper lying on a larger empty white page",
+                  "a scan of a passport on an otherwise blank page"],
+    },
+}
+PROMPTS["v2"] = {
+    "A4": PROMPTS["v1"]["A4"] + ["a scanned document page with text at the top and blank space below"],
+    "small": PROMPTS["v1"]["small"] + [
+        "a small certificate with a border placed in the middle of a large blank white page",
+        "a small printed form surrounded by wide empty white margins on all sides",
+    ],
+}
 
 
 def page_to_image(page, dpi):
@@ -72,14 +82,14 @@ class RuleJudge:
             return "small", {"ink_w": 0.0, "ink_h": 0.0}
         rw, rh = (xs.max() - xs.min()) / w, (ys.max() - ys.min()) / h
         size = "A4" if (rw >= self.a4_ratio and rh >= self.a4_ratio) else "small"
-        return size, {"ink_w": round(rw, 4), "ink_h": round(rh, 4)}
+        return size, {"ink_w": round(float(rw), 4), "ink_h": round(float(rh), 4)}
 
 
 class ClipJudge:
     """CLIP 제로샷 분류. 설명문 두 묶음 중 이미지에 가까운 쪽을 고른다."""
     name = "clip"
 
-    def __init__(self, model_id, small_threshold):
+    def __init__(self, model_id, small_threshold, prompt_set="v1"):
         import torch
         from transformers import CLIPModel, CLIPProcessor
         self.torch = torch
@@ -87,13 +97,14 @@ class ClipJudge:
         self.model = CLIPModel.from_pretrained(model_id).to(self.device).eval()
         self.proc = CLIPProcessor.from_pretrained(model_id)
         self.th = small_threshold
-        texts = PROMPTS_A4 + PROMPTS_SMALL
+        p = PROMPTS[prompt_set]
+        texts = p["A4"] + p["small"]
         with torch.no_grad():
             t = self.proc(text=texts, return_tensors="pt", padding=True).to(self.device)
             f = self.model.get_text_features(**t)
             f = getattr(f, "pooler_output", f)
             self.text = f / f.norm(dim=-1, keepdim=True)
-        self.n_a4 = len(PROMPTS_A4)
+        self.n_a4 = len(p["A4"])
 
     def __call__(self, img):
         torch = self.torch
@@ -126,6 +137,7 @@ def main():
     ap.add_argument("--a4-ratio", type=float, default=0.95, help="A4 로 인정하는 최소 비율 (가로·세로 각각)")
     ap.add_argument("--clip-model", default="openai/clip-vit-base-patch32")
     ap.add_argument("--clip-threshold", type=float, default=0.5, help="p_small 이 이 값 이상이면 작은 서류")
+    ap.add_argument("--clip-prompts", choices=sorted(PROMPTS), default="v2", help="설명문 묶음 (v1: 첫 실행, v2: 개선)")
     ap.add_argument("--jpg-quality", type=int, default=92)
     a = ap.parse_args()
 
@@ -134,7 +146,7 @@ def main():
     (out / "config.json").write_text(json.dumps(vars(a), ensure_ascii=False, indent=2), encoding="utf-8")
 
     t0 = time.perf_counter()
-    judge = RuleJudge(a.a4_ratio) if a.backend == "rule" else ClipJudge(a.clip_model, a.clip_threshold)
+    judge = RuleJudge(a.a4_ratio) if a.backend == "rule" else ClipJudge(a.clip_model, a.clip_threshold, a.clip_prompts)
     load_s = time.perf_counter() - t0
 
     rows = []

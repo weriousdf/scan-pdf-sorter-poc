@@ -1,0 +1,27 @@
+페이지 19장
+  가로/세로      19/19
+  A4/작은 서류   10/19
+  폴더까지 정확  10/19
+  작은 서류 잡아냄 8/8  (A4 를 작은 서류로 잘못 보냄 9장)
+  [비교] '전부 A4' 라고 했을 때: 12/19, 작은 서류 1/8 (페이지 크기로 잡히는 것만)
+
+  정답\예측     A4   small
+  A4             2      9
+  small          0      8
+
+틀린 페이지
+  fake_01_mixed.pdf p01  정답 A4/portrait  예측 small/portrait (rule) {'ink_w': '0.8842', 'ink_h': '0.8778'}  | 번역 인증서 표지 (테두리 꽉 참)
+  fake_01_mixed.pdf p02  정답 A4/portrait  예측 small/portrait (rule) {'ink_w': '0.7466', 'ink_h': '0.8648'}  | 재학증명서 (글자 많음)
+  fake_01_mixed.pdf p03  정답 A4/portrait  예측 small/portrait (rule) {'ink_w': '0.7534', 'ink_h': '0.4021'}  | 증명서 뒷장 (내용 위쪽만)
+  fake_01_mixed.pdf p04  정답 A4/portrait  예측 small/portrait (rule) {'ink_w': '0.8289', 'ink_h': '0.3938'}  | 아포스티유 번역본 (위쪽 표만)
+  fake_01_mixed.pdf p07  정답 A4/portrait  예측 small/portrait (rule) {'ink_w': '0.7634', 'ink_h': '0.8648'}  | 번역 확인서 (글자 많음)
+  fake_02_landscape.pdf p01  정답 A4/portrait  예측 small/portrait (rule) {'ink_w': '0.8842', 'ink_h': '0.8778'}  | 번역 인증서 표지
+  fake_02_landscape.pdf p02  정답 A4/landscape  예측 small/landscape (rule) {'ink_w': '0.7023', 'ink_h': '0.7517'}  | 졸업장 번역본 (가로)
+  fake_02_landscape.pdf p06  정답 A4/portrait  예측 small/portrait (rule) {'ink_w': '0.7534', 'ink_h': '0.4021'}  | 성적증명서 번역본 (위쪽 절반)
+  fake_03_id_passport.pdf p05  정답 A4/portrait  예측 small/portrait (rule) {'ink_w': '0.8289', 'ink_h': '0.3938'}  | 여권 번역본 (A4 서류)
+
+[기준값 탐색] 잉크 영역(짧은 쪽 비율) < 기준 → 작은 서류
+  가장 좋은 기준 0.3938 에서도 2장 틀림 (판정 대상 18장)
+  판정 값 (정답별):
+    A4    [0.394, 0.394, 0.402, 0.402, 0.702, 0.747, 0.763, 0.878, 0.878, 0.982, 0.982]
+    small [0.121, 0.18, 0.241, 0.295, 0.299, 0.497, 0.536]

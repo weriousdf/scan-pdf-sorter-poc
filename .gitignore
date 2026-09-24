@@ -4,3 +4,7 @@ outputs_private/
 
 __pycache__/
 .venv/
+
+# 결과 JPG 는 용량이 커서 올리지 않는다 (predictions.csv, score.txt, config.json 만 올린다)
+outputs/**/*.jpg
+outputs_colab.zip
